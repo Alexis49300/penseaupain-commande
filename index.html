@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Commandes pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F4F6F3;--card:#fff;--ink:#1E2A3A;--mute:#6B7686;--line:#DDE2DA;--acc:#B8721D;--accbg:#F6E7CF;--ok:#2F7D5B}
+@media(prefers-color-scheme:dark){:root{--bg:#141A22;--card:#1D2531;--ink:#EDEFE9;--mute:#98A2B3;--line:#2C3644;--acc:#E0A050;--accbg:#3A2E1B;--ok:#5BC49A}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.45 "Bricolage Grotesque",system-ui,sans-serif}
+button,input,select{font:inherit;color:inherit}button{cursor:pointer}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+header{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px 20px;background:#1E2A3A;color:#fff}
+header b{font-weight:800;font-size:20px}
+main{max-width:1040px;margin:0 auto;padding:20px}
+h1{font-size:28px;font-weight:800;letter-spacing:-.5px;margin:4px 0 2px}h2{font-size:17px;margin:22px 0 8px}
+.sub,.note{color:var(--mute)}.note{font-size:13px}
+#login{max-width:360px;margin:12vh auto;padding:20px}#login form{display:grid;gap:10px}
+#login input{padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+.lnk{border:0;background:none;color:var(--mute);text-decoration:underline}
+.days{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:6px}
+.day{flex:0 0 auto;min-width:64px;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 12px;text-align:center}
+.day:disabled{opacity:.4;cursor:not-allowed}.day.on{background:#1E2A3A;color:#fff;border-color:#1E2A3A}
+.day small{display:block;opacity:.7}.day i{display:block;font-style:normal;font-size:12px;color:var(--ok)}.day.on i{color:#9FE3C4}
+.grid{display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start}
+@media(max-width:800px){.grid{grid-template-columns:1fr}}
+.row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.row .n{flex:1}.p{font-weight:600;min-width:64px;text-align:right}
+.st{display:flex;align-items:center;gap:6px}
+.st button{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--card);font-size:20px;line-height:1}
+.st input{width:44px;text-align:center;border:0;background:none;font-weight:600}
+.recap{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;position:sticky;top:12px}
+.recap ul{padding:0;margin:8px 0}.recap li{display:flex;justify-content:space-between;padding:4px 0;list-style:none}
+.tot{display:flex;justify-content:space-between;font-weight:800;font-size:20px;border-top:1px solid var(--line);padding-top:10px}
+.cta{width:100%;margin-top:14px;border:0;border-radius:10px;background:var(--acc);color:#fff;font-weight:600;padding:12px}
+.cta:disabled{background:var(--line);color:var(--mute);cursor:not-allowed}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:18px;overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 16px;color:var(--mute);border-bottom:3px solid transparent;white-space:nowrap}
+.tabs button.on{color:var(--ink);font-weight:600;border-color:var(--acc)}
+.tw{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:14px}
+table{width:100%;border-collapse:collapse;min-width:560px}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--mute);font-size:14px}td.r,th.r{text-align:right}tr:last-child td{border-bottom:0}
+.big{font-weight:800;font-size:18px}
+.tag{display:inline-block;border-radius:99px;padding:2px 10px;font-size:13px;background:var(--accbg);color:var(--acc)}
+.act{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px 14px}
+.act.pri{background:#1E2A3A;color:#fff;border-color:#1E2A3A}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.bar input,.bar select,.f input,.f select{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px 12px}
+.f{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px}
+.f label{display:block;font-size:14px;color:var(--mute);margin-bottom:4px}.f input,.f select{width:100%}
+td input[type=number]{width:90px;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:6px 8px;text-align:right}
+td input:disabled{opacity:.4}.ln{display:block;font-size:14px;color:var(--mute)}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#1E2A3A;color:#fff;padding:12px 20px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9}
+#toast.show{opacity:1}[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="login">
+  <form id="lf">
+    <h1 id="brand"></h1>
+    <label id="ll" for="li">Votre code d'accès</label>
+    <input id="li" autocomplete="off" required>
+    <button class="cta" style="margin:0">Se connecter</button>
+    <button type="button" class="lnk" id="sw">Espace boulangerie</button>
+  </form>
+</div>
+
+<div id="app" hidden>
+<header><b id="hb"></b><span id="who"></span><button id="out" class="act">Quitter</button></header>
+<main>
+<section id="client" hidden>
+  <h1>Bonjour, <span id="cn"></span></h1>
+  <p class="sub">Commandez jusqu'à 7 jours à l'avance. Modifiable jusqu'à 16 h la veille.</p>
+  <div class="days" id="days"></div>
+  <div class="grid">
+    <div id="cat"></div>
+    <aside class="recap">
+      <b id="rh"></b><ul id="rl"></ul>
+      <div class="tot"><span>Total HT</span><span id="rt"></span></div>
+      <button class="cta" id="ok"></button>
+      <p class="note">Livraison avant 7 h. Prix HT.</p>
+    </aside>
+  </div>
+</section>
+
+<section id="admin" hidden>
+  <h1>Tableau de bord</h1>
+  <div class="tabs" id="tabs">
+    <button data-t="prod">Production du jour</button><button data-t="cmd">Toutes les commandes</button>
+    <button data-t="cli">Clients et mercuriales</button><button data-t="fac">Facturation mensuelle</button>
+  </div>
+  <div id="t-prod"><div class="bar"><input type="date" id="pd" aria-label="Jour de production"></div>
+    <div class="tw"><table><thead><tr><th>Produit</th><th class="r">Total à produire</th><th class="r">Nb de clients</th></tr></thead><tbody id="pb"></tbody></table></div></div>
+  <div id="t-cmd" hidden><div class="bar"><input type="date" id="od" aria-label="Filtrer par jour"><select id="fc" aria-label="Filtrer par client"></select></div>
+    <div class="tw"><table><thead><tr><th>Livraison</th><th>Client</th><th>Détail</th><th class="r">Total HT</th></tr></thead><tbody id="ob"></tbody></table></div></div>
+  <div id="t-cli" hidden>
+    <div id="cl-list"><div class="bar"><button class="act pri" id="newc">+ Nouveau client</button></div>
+      <div class="tw"><table><thead><tr><th>Client</th><th>Contact</th><th>Code d'accès</th><th class="r">Produits</th><th></th></tr></thead><tbody id="clb"></tbody></table></div></div>
+    <div id="cl-ed" hidden></div>
+  </div>
+  <div id="t-fac" hidden><div class="bar"><input type="month" id="fm" aria-label="Mois"><button class="act pri" id="csv">Exporter en CSV</button><span class="note">TVA appliquée : 5,5 % sur tout (à affiner avec votre comptable)</span></div>
+    <div class="tw"><table><thead><tr><th>Client</th><th class="r">Commandes</th><th class="r">Total HT</th><th class="r">TVA</th><th class="r">Total TTC</th></tr></thead><tbody id="fb"></tbody></table></div></div>
+</section>
+</main>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+const NAME='Fournil Saint-Martin',TVA=0.055;
+const $=id=>document.getElementById(id),eur=n=>n.toFixed(2).replace('.',',')+' €';
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const iso=d=>d.toLocaleDateString('sv-SE'),plus=n=>{const d=new Date();d.setDate(d.getDate()+n);return iso(d)};
+const fr=s=>new Date(s+'T12:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+let S={},q={},dy='',ed=null,adm=false;
+document.title=NAME+' · Commandes pro';$('brand').textContent=NAME;$('hb').textContent=NAME;
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),3000)}
+async function api(action,b={}){
+  const r=await fetch('/api',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+(S.token||'')},body:JSON.stringify({action,...b})});
+  const j=await r.json().catch(()=>({error:'Réponse invalide du serveur'}));
+  if(!r.ok)throw new Error(j.error||'Erreur');return j}
+// ---- connexion
+$('sw').onclick=()=>{adm=!adm;$('ll').textContent=adm?'Mot de passe':"Votre code d'accès";$('li').type=adm?'password':'text';$('li').value='';$('sw').textContent=adm?'Espace client':'Espace boulangerie'};
+$('lf').onsubmit=async e=>{e.preventDefault();try{const v=$('li').value.trim();S=await api('login',adm?{password:v}:{code:v});S={...S,...await api('boot')};start()}catch(x){toast(x.message)}};
+$('out').onclick=()=>location.reload();
+function start(){$('login').hidden=true;$('app').hidden=false;$('who').textContent=S.nom;const c=S.role==='client';$('client').hidden=!c;$('admin').hidden=c;c?initC():initA()}
+// ---- client
+const open=d=>{const c=new Date(d+'T16:00');c.setDate(c.getDate()-1);return new Date()<c};
+function initC(){$('cn').textContent=S.nom;pick([1,2,3,4,5,6,7].map(plus).find(open)||plus(1))}
+function pick(d){dy=d;const o=S.orders.find(o=>o.date==d);q={};(o?o.lignes:[]).forEach(l=>q[l.p]=l.q);drawC()}
+function drawC(){
+  $('days').innerHTML=[1,2,3,4,5,6,7].map(plus).map(d=>{const dt=new Date(d+'T12:00');return `<button class="day${d==dy?' on':''}" data-d="${d}"${open(d)?'':' disabled'}><small>${dt.toLocaleDateString('fr-FR',{weekday:'short'})}</small><b>${dt.getDate()}</b><i>${S.orders.some(o=>o.date==d)?'commandé':'&nbsp;'}</i></button>`}).join('');
+  let h='',c='',t=0,l='';
+  S.catalog.forEach(p=>{if(p.cat!==c){c=p.cat;h+=`<h2>${esc(c)}</h2>`}
+    h+=`<div class="row"><div class="n">${esc(p.nom)}</div><div class="p">${eur(p.px)}</div><div class="st"><button aria-label="Retirer" data-p="${p.pid}" data-s="-1">−</button><input aria-label="Quantité ${esc(p.nom)}" value="${q[p.pid]||0}" data-p="${p.pid}" inputmode="numeric"><button aria-label="Ajouter" data-p="${p.pid}" data-s="1">+</button></div></div>`;
+    const n=q[p.pid]||0;if(n){t+=n*p.px;l+=`<li><span>${n} × ${esc(p.nom)}</span><span>${eur(n*p.px)}</span></li>`}});
+  $('cat').innerHTML=h||'<p class="sub">Votre mercuriale est vide. Contactez la boulangerie.</p>';
+  const ex=S.orders.some(o=>o.date==dy);
+  $('rh').textContent='Commande du '+fr(dy);$('rl').innerHTML=l||'<li class="sub">Aucun produit</li>';$('rt').textContent=eur(t);
+  $('ok').disabled=(!t&&!ex)||!open(dy);$('ok').textContent=!t&&ex?'Annuler la commande':ex?'Modifier la commande':'Valider la commande'}
+$('days').onclick=e=>{const b=e.target.closest('.day');if(b&&!b.disabled)pick(b.dataset.d)};
+$('cat').onclick=e=>{const b=e.target.closest('button');if(!b)return;const p=b.dataset.p,n=q[p]||0;q[p]=Math.max(0,n+(+b.dataset.s)*(n>=20?10:1));drawC()};
+$('cat').onchange=e=>{q[e.target.dataset.p]=Math.max(0,parseInt(e.target.value)||0);drawC()};
+$('ok').onclick=async()=>{try{const empty=!Object.values(q).some(n=>n>0);await api('saveOrder',{date:dy,lignes:q});S={...S,...await api('boot')};toast(empty?'Commande annulée':'Commande enregistrée pour le '+fr(dy));drawC()}catch(x){toast(x.message)}};
+// ---- boulangerie
+const cn=id=>(S.clients.find(c=>c.id==id)||{}).nom||id,pn=id=>(S.produits.find(p=>p.id==id)||{}).nom||id;
+const tot=o=>o.lignes.reduce((a,l)=>a+l.q*l.px,0);
+function fillF(){$('fc').innerHTML='<option value="">Tous les clients</option>'+S.clients.map(c=>`<option value="${esc(c.id)}">${esc(c.nom)}</option>`).join('')}
+function initA(){$('pd').value=plus(1);$('fm').value=plus(0).slice(0,7);fillF();tab('prod')}
+function tab(t){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t==t));['prod','cmd','cli','fac'].forEach(x=>$('t-'+x).hidden=x!=t);({prod:drawP,cmd:drawO,cli:closeEd,fac:drawF})[t]()}
+$('tabs').onclick=e=>{const b=e.target.closest('button');if(b)tab(b.dataset.t)};
+function drawP(){const a={},n={};S.orders.filter(o=>o.date==$('pd').value).forEach(o=>o.lignes.forEach(l=>{a[l.p]=(a[l.p]||0)+l.q;n[l.p]=(n[l.p]||0)+1}));
+  $('pb').innerHTML=Object.keys(a).map(p=>`<tr><td>${esc(pn(p))}</td><td class="r big">${a[p]}</td><td class="r">${n[p]}</td></tr>`).join('')||'<tr><td colspan="3">Aucune commande ce jour-là.</td></tr>'}
+$('pd').onchange=drawP;
+function drawO(){const d=$('od').value,c=$('fc').value;
+  $('ob').innerHTML=S.orders.filter(o=>(!d||o.date==d)&&(!c||o.client_id==c)).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0).map(o=>`<tr><td>${fr(o.date)}</td><td><b>${esc(cn(o.client_id))}</b></td><td>${o.lignes.map(l=>`<span class="ln">${l.q} × ${esc(pn(l.p))}</span>`).join('')}</td><td class="r big">${eur(tot(o))}</td></tr>`).join('')||'<tr><td colspan="4">Aucune commande.</td></tr>'}
+$('od').onchange=$('fc').onchange=drawO;
+function closeEd(){$('cl-ed').hidden=true;$('cl-list').hidden=false;
+  $('clb').innerHTML=S.clients.map((c,i)=>`<tr><td><b>${esc(c.nom)}</b></td><td>${esc(c.contact)}</td><td>${esc(c.code)}</td><td class="r">${Object.keys(c.m).length}</td><td class="r"><button class="act" data-i="${i}">Modifier</button></td></tr>`).join('')}
+$('clb').onclick=e=>{const b=e.target.closest('button');if(b)openEd(S.clients[+b.dataset.i])};
+$('newc').onclick=()=>openEd({nom:'',contact:'',code:'B'+Math.floor(1000+Math.random()*9000),m:{}});
+function openEd(c){ed={...c,m:{...c.m}};$('cl-list').hidden=true;$('cl-ed').hidden=false;drawEd()}
+function drawEd(){
+  $('cl-ed').innerHTML=`<h2 style="margin-top:0">${ed.id?esc(ed.nom):'Nouveau client'}</h2>
+  <div class="f"><div><label for="en">Établissement</label><input id="en" value="${esc(ed.nom)}"></div><div><label for="ec">Contact</label><input id="ec" value="${esc(ed.contact)}"></div>
+  <div><label for="ek">Code d'accès client</label><input id="ek" value="${esc(ed.code)}"></div>
+  <div><label for="ecp">Reprendre la mercuriale de</label><select id="ecp"><option value="">Choisir un client…</option>${S.clients.map((c,j)=>`<option value="${j}">${esc(c.nom)}</option>`).join('')}</select></div></div>
+  <div class="tw"><table><thead><tr><th>Dans sa mercuriale</th><th>Produit</th><th class="r">Prix standard</th><th class="r">Prix du client (HT)</th><th></th></tr></thead><tbody>${S.produits.map(p=>{const on=p.id in ed.m,v=on?ed.m[p.id]:p.px;return `<tr><td><input type="checkbox" data-j="${esc(p.id)}" aria-label="Activer ${esc(p.nom)}"${on?' checked':''}></td><td>${esc(p.nom)}</td><td class="r">${eur(p.px)}</td><td class="r"><input type="number" step="0.01" min="0" data-p="${esc(p.id)}" value="${v.toFixed(2)}"${on?'':' disabled'} aria-label="Prix ${esc(p.nom)}"></td><td>${on&&v!=p.px?'<span class="tag">tarif spécifique</span>':''}</td></tr>`}).join('')}</tbody></table></div>
+  <div class="bar" style="margin-top:14px"><button class="act pri" id="esv">Enregistrer</button><button class="act" id="ecn">Annuler</button></div>`;
+  $('en').oninput=e=>ed.nom=e.target.value;$('ec').oninput=e=>ed.contact=e.target.value;$('ek').oninput=e=>ed.code=e.target.value;
+  $('ecp').onchange=e=>{if(e.target.value!==''){ed.m={...S.clients[+e.target.value].m};drawEd();toast('Mercuriale copiée, ajustez les prix')}};
+  $('cl-ed').querySelectorAll('[data-j]').forEach(x=>x.onchange=()=>{const p=S.produits.find(p=>p.id==x.dataset.j);x.checked?ed.m[p.id]=p.px:delete ed.m[p.id];drawEd()});
+  $('cl-ed').querySelectorAll('[data-p]').forEach(x=>x.onchange=()=>{ed.m[x.dataset.p]=Math.max(0,parseFloat(x.value)||0);drawEd()});
+  $('ecn').onclick=closeEd;
+  $('esv').onclick=async()=>{if(!ed.nom.trim()||!ed.code.trim())return toast('Renseignez le nom et le code d\'accès');if(!Object.keys(ed.m).length)return toast('Ajoutez au moins un produit à la mercuriale');
+    try{await api('saveClient',ed);S={...S,...await api('boot')};fillF();closeEd();toast('Client enregistré')}catch(x){toast(x.message)}}}
+function drawF(){const m=$('fm').value,r={};
+  S.orders.filter(o=>o.date.startsWith(m)).forEach(o=>{const x=r[o.client_id]||(r[o.client_id]={n:0,ht:0});x.n++;x.ht+=tot(o)});
+  S.bill=Object.entries(r);
+  $('fb').innerHTML=S.bill.map(([c,x])=>`<tr><td>${esc(cn(c))}</td><td class="r">${x.n}</td><td class="r">${eur(x.ht)}</td><td class="r">${eur(x.ht*TVA)}</td><td class="r big">${eur(x.ht*(1+TVA))}</td></tr>`).join('')||'<tr><td colspan="5">Aucune commande ce mois-ci.</td></tr>'}
+$('fm').onchange=drawF;
+$('csv').onclick=()=>{const t='Client;Commandes;Total HT;TVA;Total TTC\n'+S.bill.map(([c,x])=>[cn(c),x.n,x.ht.toFixed(2),(x.ht*TVA).toFixed(2),(x.ht*(1+TVA)).toFixed(2)].join(';')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+t],{type:'text/csv'}));a.download='facturation-'+$('fm').value+'.csv';a.click()};
+</script>
+</body>
+</html>
