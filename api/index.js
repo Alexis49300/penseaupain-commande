@@ -42,6 +42,7 @@ module.exports = async (req, res) => {
       return res.json({ ...(await gas({ action: 'admin' })), orders: await gas({ action: 'orders', from }) });
     }
     if (b.action === 'saveOrder') return res.json(await gas({ action: 'saveOrder', clientId: admin ? b.clientId : p.clientId, date: b.date, lignes: b.lignes || {}, admin }));
+    if (b.action === 'saveProduct' && admin) return res.json(await gas({ action: 'saveProduct', id: b.id, cat: b.cat, nom: b.nom, px: b.px, dispo: b.dispo, addAll: b.addAll }));
     if (b.action === 'saveClient' && admin) return res.json(await gas({ action: 'saveClient', id: b.id, nom: b.nom, contact: b.contact, code: b.code, m: b.m || {} }));
     return res.status(403).json({ error: 'Action non autorisée' });
   } catch (e) { return res.status(400).json({ error: e.message }); }
