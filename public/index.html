@@ -87,7 +87,8 @@ td input:disabled{opacity:.4}.ln{display:block;font-size:14px;color:var(--mute)}
 </section>
 
 <section id="admin" hidden>
-  <h1>Tableau de bord</h1>
+  <h1 id="at">Tableau de bord</h1>
+  <div class="bar" id="svb" hidden><label class="note">Site affiché <select id="sv"></select></label></div>
   <div class="tabs" id="tabs">
     <button data-t="prod">Production du jour</button><button data-t="cmd">Toutes les commandes</button>
     <button data-t="cli">Clients et mercuriales</button><button data-t="prd">Produits</button><button data-t="fac">Facturation mensuelle</button>
@@ -119,7 +120,7 @@ const $=id=>document.getElementById(id),eur=n=>n.toFixed(2).replace('.',',')+' �
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const iso=d=>d.toLocaleDateString('sv-SE'),plus=n=>{const d=new Date();d.setDate(d.getDate()+n);return iso(d)};
 const fr=s=>new Date(s+'T12:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
-let S={},q={},dy='',ed=null,adm=false;
+let S={},q={},dy='',ed=null,adm=false,ct='prod';
 document.title=NAME+' · Commandes pro';$('brand').textContent=NAME;$('hb').textContent=NAME;
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),3000)}
 async function api(action,b={}){
@@ -153,14 +154,19 @@ $('ok').onclick=async()=>{try{const empty=!Object.values(q).some(n=>n>0);await a
 const cn=id=>(S.clients.find(c=>c.id==id)||{}).nom||id,pn=id=>(S.produits.find(p=>p.id==id)||{}).nom||id;
 const tot=o=>o.lignes.reduce((a,l)=>a+l.q*l.px,0);
 function fillF(){$('fc').innerHTML='<option value="">Tous les clients</option>'+S.clients.map(c=>`<option value="${esc(c.id)}">${esc(c.nom)}</option>`).join('')}
-function initA(){$('pd').value=plus(1);$('fm').value=plus(0).slice(0,7);fillF();tab('prod')}
-function tab(t){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t==t));['prod','cmd','cli','prd','fac'].forEach(x=>$('t-'+x).hidden=x!=t);({prod:drawP,cmd:drawO,cli:closeEd,prd:drawPr,fac:drawF})[t]()}
+const sn=id=>(S.sites.find(s=>s.id==id)||{}).nom||id;
+function vo(){const s=$('sv').value;if(!s)return S.orders;const ids=new Set(S.produits.filter(p=>p.site==s).map(p=>p.id));return S.orders.map(o=>({...o,lignes:o.lignes.filter(l=>ids.has(l.p))})).filter(o=>o.lignes.length)}
+function initA(){$('pd').value=plus(1);$('fm').value=plus(0).slice(0,7);fillF();const ow=S.site==='*';$('svb').hidden=!ow;
+  if(ow)$('sv').innerHTML='<option value="">Tous les sites</option>'+S.sites.map(s=>`<option value="${s.id}">${esc(s.nom)}</option>`).join('');
+  $('at').textContent='Tableau de bord · '+(ow?'tous les sites':sn(S.site));tab('prod')}
+$('sv').onchange=()=>tab(ct);
+function tab(t){ct=t;document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t==t));['prod','cmd','cli','prd','fac'].forEach(x=>$('t-'+x).hidden=x!=t);({prod:drawP,cmd:drawO,cli:closeEd,prd:drawPr,fac:drawF})[t]()}
 $('tabs').onclick=e=>{const b=e.target.closest('button');if(b)tab(b.dataset.t)};
-function drawP(){const a={},n={};S.orders.filter(o=>o.date==$('pd').value).forEach(o=>o.lignes.forEach(l=>{a[l.p]=(a[l.p]||0)+l.q;n[l.p]=(n[l.p]||0)+1}));
+function drawP(){const a={},n={};vo().filter(o=>o.date==$('pd').value).forEach(o=>o.lignes.forEach(l=>{a[l.p]=(a[l.p]||0)+l.q;n[l.p]=(n[l.p]||0)+1}));
   $('pb').innerHTML=Object.keys(a).map(p=>`<tr><td>${esc(pn(p))}</td><td class="r big">${a[p]}</td><td class="r">${n[p]}</td></tr>`).join('')||'<tr><td colspan="3">Aucune commande ce jour-là.</td></tr>'}
 $('pd').onchange=drawP;
 function drawO(){const d=$('od').value,c=$('fc').value;
-  $('ob').innerHTML=S.orders.filter(o=>(!d||o.date==d)&&(!c||o.client_id==c)).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0).map(o=>`<tr><td>${fr(o.date)}</td><td><b>${esc(cn(o.client_id))}</b></td><td>${o.lignes.map(l=>`<span class="ln">${l.q} × ${esc(pn(l.p))}</span>`).join('')}</td><td class="r big">${eur(tot(o))}</td></tr>`).join('')||'<tr><td colspan="4">Aucune commande.</td></tr>'}
+  $('ob').innerHTML=vo().filter(o=>(!d||o.date==d)&&(!c||o.client_id==c)).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0).map(o=>`<tr><td>${fr(o.date)}</td><td><b>${esc(cn(o.client_id))}</b></td><td>${o.lignes.map(l=>`<span class="ln">${l.q} × ${esc(pn(l.p))}</span>`).join('')}</td><td class="r big">${eur(tot(o))}</td></tr>`).join('')||'<tr><td colspan="4">Aucune commande.</td></tr>'}
 $('od').onchange=$('fc').onchange=drawO;
 function closeEd(){$('cl-ed').hidden=true;$('cl-list').hidden=false;
   $('clb').innerHTML=S.clients.map((c,i)=>`<tr><td><b>${esc(c.nom)}</b></td><td>${esc(c.contact)}</td><td>${esc(c.code)}</td><td class="r">${Object.keys(c.m).length}</td><td class="r"><button class="act" data-i="${i}">Modifier</button></td></tr>`).join('')}
@@ -172,34 +178,36 @@ function drawEd(){
   <div class="f"><div><label for="en">Établissement</label><input id="en" value="${esc(ed.nom)}"></div><div><label for="ec">Contact</label><input id="ec" value="${esc(ed.contact)}"></div>
   <div><label for="ek">Code d'accès client</label><input id="ek" value="${esc(ed.code)}"></div>
   <div><label for="ecp">Reprendre la mercuriale de</label><select id="ecp"><option value="">Choisir un client…</option>${S.clients.map((c,j)=>`<option value="${j}">${esc(c.nom)}</option>`).join('')}</select></div></div>
-  <div class="tw"><table><thead><tr><th>Dans sa mercuriale</th><th>Produit</th><th class="r">Prix standard</th><th class="r">Prix du client (HT)</th><th></th></tr></thead><tbody>${S.produits.map(p=>{const on=p.id in ed.m,v=on?ed.m[p.id]:p.px;return `<tr><td><input type="checkbox" data-j="${esc(p.id)}" aria-label="Activer ${esc(p.nom)}"${on?' checked':''}></td><td>${esc(p.nom)}</td><td class="r">${eur(p.px)}</td><td class="r"><input type="number" step="0.01" min="0" data-p="${esc(p.id)}" value="${v.toFixed(2)}"${on?'':' disabled'} aria-label="Prix ${esc(p.nom)}"></td><td>${on&&v!=p.px?'<span class="tag">tarif spécifique</span>':''}</td></tr>`}).join('')}</tbody></table></div>
+  ${!ed.id&&S.site!=='*'?`<p><label><input type="checkbox" id="elk"> Ce client a déjà un compte chez l’autre site (utiliser son code d’accès existant)</label></p>`:''}
+  <div class="tw"><table><thead><tr><th>Dans sa mercuriale</th><th>Produit</th><th class="r">Prix standard</th><th class="r">Prix du client (HT)</th><th></th></tr></thead><tbody>${S.produits.map(p=>{const on=p.id in ed.m,v=on?ed.m[p.id]:p.px;return `<tr><td><input type="checkbox" data-j="${esc(p.id)}" aria-label="Activer ${esc(p.nom)}"${on?' checked':''}></td><td>${esc(p.nom)}${S.site==='*'?` <span class="note">· ${esc(sn(p.site))}</span>`:''}</td><td class="r">${eur(p.px)}</td><td class="r"><input type="number" step="0.01" min="0" data-p="${esc(p.id)}" value="${v.toFixed(2)}"${on?'':' disabled'} aria-label="Prix ${esc(p.nom)}"></td><td>${on&&v!=p.px?'<span class="tag">tarif spécifique</span>':''}</td></tr>`}).join('')}</tbody></table></div>
   <div class="bar" style="margin-top:14px"><button class="act pri" id="esv">Enregistrer</button><button class="act" id="ecn">Annuler</button></div>`;
   $('en').oninput=e=>ed.nom=e.target.value;$('ec').oninput=e=>ed.contact=e.target.value;$('ek').oninput=e=>ed.code=e.target.value;
   $('ecp').onchange=e=>{if(e.target.value!==''){ed.m={...S.clients[+e.target.value].m};drawEd();toast('Mercuriale copiée, ajustez les prix')}};
   $('cl-ed').querySelectorAll('[data-j]').forEach(x=>x.onchange=()=>{const p=S.produits.find(p=>p.id==x.dataset.j);x.checked?ed.m[p.id]=p.px:delete ed.m[p.id];drawEd()});
   $('cl-ed').querySelectorAll('[data-p]').forEach(x=>x.onchange=()=>{ed.m[x.dataset.p]=Math.max(0,parseFloat(x.value)||0);drawEd()});
   $('ecn').onclick=closeEd;
-  $('esv').onclick=async()=>{if(!ed.nom.trim()||!ed.code.trim())return toast('Renseignez le nom et le code d\'accès');if(!Object.keys(ed.m).length)return toast('Ajoutez au moins un produit à la mercuriale');
-    try{await api('saveClient',ed);S={...S,...await api('boot')};fillF();closeEd();toast('Client enregistré')}catch(x){toast(x.message)}}}
+  $('esv').onclick=async()=>{const lk=!!($('elk')&&$('elk').checked);if((!lk&&!ed.nom.trim())||!ed.code.trim())return toast('Renseignez le nom et le code d\'accès');if(!Object.keys(ed.m).length)return toast('Ajoutez au moins un produit à la mercuriale');
+    try{await api('saveClient',{...ed,link:lk});S={...S,...await api('boot')};fillF();closeEd();toast('Client enregistré')}catch(x){toast(x.message)}}}
 function drawPr(){$('pr-ed').hidden=true;$('pr-list').hidden=false;
-  $('prb').innerHTML=S.produits.map((p,i)=>`<tr><td>${esc(p.cat)}</td><td><b>${esc(p.nom)}</b></td><td class="r">${eur(p.px)}</td><td>${p.dispo?'<span class="tag">Disponible</span>':'<span class="note">Masqué</span>'}</td><td class="r"><button class="act" data-i="${i}">Modifier</button></td></tr>`).join('')||'<tr><td colspan="5">Aucun produit.</td></tr>'}
+  $('prb').innerHTML=S.produits.map((p,i)=>`<tr><td>${esc(p.cat)}</td><td><b>${esc(p.nom)}</b>${S.site==='*'?` <span class="note">· ${esc(sn(p.site))}</span>`:''}</td><td class="r">${eur(p.px)}</td><td>${p.dispo?'<span class="tag">Disponible</span>':'<span class="note">Masqué</span>'}</td><td class="r"><button class="act" data-i="${i}">Modifier</button></td></tr>`).join('')||'<tr><td colspan="5">Aucun produit.</td></tr>'}
 $('prb').onclick=e=>{const b=e.target.closest('button');if(b)openPr(S.produits[+b.dataset.i])};
 $('newp').onclick=()=>openPr({cat:'',nom:'',px:0,dispo:true});
 function openPr(p){$('pr-list').hidden=true;$('pr-ed').hidden=false;
   $('pr-ed').innerHTML=`<h2 style="margin-top:0">${p.id?esc(p.nom):'Nouveau produit'}</h2>
   <div class="f"><div><label for="fpc">Catégorie</label><input id="fpc" list="cats" value="${esc(p.cat)}"><datalist id="cats">${[...new Set(S.produits.map(x=>x.cat))].map(c=>`<option value="${esc(c)}">`).join('')}</datalist></div>
   <div><label for="fpn">Nom du produit</label><input id="fpn" value="${esc(p.nom)}"></div>
-  <div><label for="fpp">Prix standard HT (€)</label><input id="fpp" type="number" step="0.01" min="0" value="${p.px}"></div></div>
+  <div><label for="fpp">Prix standard HT (€)</label><input id="fpp" type="number" step="0.01" min="0" value="${p.px}"></div>
+  ${S.site==='*'?`<div><label for="fpsite">Fabriqué par</label><select id="fpsite">${S.sites.map(s=>`<option value="${s.id}"${s.id==p.site?' selected':''}>${esc(s.nom)}</option>`).join('')}</select></div>`:''}</div>
   <p><label><input type="checkbox" id="fpd"${p.dispo?' checked':''}> Disponible à la commande</label></p>
-  ${p.id?'':'<p><label><input type="checkbox" id="fpa"> Ajouter à la mercuriale de tous les clients existants (au prix standard)</label></p>'}
+  ${p.id?'':'<p><label><input type="checkbox" id="fpa"> Ajouter à la mercuriale de tous les clients de ce site (au prix standard)</label></p>'}
   <p class="note">Le prix standard sert de base pour les nouvelles mercuriales. Le modifier ne change pas les prix déjà fixés pour chaque client.</p>
   <div class="bar"><button class="act pri" id="fps">Enregistrer</button><button class="act" id="fpx">Annuler</button></div>`;
   $('fpx').onclick=drawPr;
-  $('fps').onclick=async()=>{const d={id:p.id,cat:$('fpc').value,nom:$('fpn').value,px:parseFloat($('fpp').value),dispo:$('fpd').checked,addAll:!!($('fpa')&&$('fpa').checked)};
+  $('fps').onclick=async()=>{const d={id:p.id,cat:$('fpc').value,nom:$('fpn').value,px:parseFloat($('fpp').value),dispo:$('fpd').checked,addAll:!!($('fpa')&&$('fpa').checked),site:$('fpsite')?$('fpsite').value:undefined};
     if(!d.nom.trim())return toast('Indiquez le nom du produit');if(!(d.px>=0))return toast('Prix invalide');
     try{await api('saveProduct',d);S={...S,...await api('boot')};drawPr();toast('Produit enregistré')}catch(x){toast(x.message)}}}
 function drawF(){const m=$('fm').value,r={};
-  S.orders.filter(o=>o.date.startsWith(m)).forEach(o=>{const x=r[o.client_id]||(r[o.client_id]={n:0,ht:0});x.n++;x.ht+=tot(o)});
+  vo().filter(o=>o.date.startsWith(m)).forEach(o=>{const x=r[o.client_id]||(r[o.client_id]={n:0,ht:0});x.n++;x.ht+=tot(o)});
   S.bill=Object.entries(r);
   $('fb').innerHTML=S.bill.map(([c,x])=>`<tr><td>${esc(cn(c))}</td><td class="r">${x.n}</td><td class="r">${eur(x.ht)}</td><td class="r">${eur(x.ht*TVA)}</td><td class="r big">${eur(x.ht*(1+TVA))}</td></tr>`).join('')||'<tr><td colspan="5">Aucune commande ce mois-ci.</td></tr>'}
 $('fm').onchange=drawF;
