@@ -90,7 +90,7 @@ td input:disabled{opacity:.4}.ln{display:block;font-size:14px;color:var(--mute)}
   <h1>Tableau de bord</h1>
   <div class="tabs" id="tabs">
     <button data-t="prod">Production du jour</button><button data-t="cmd">Toutes les commandes</button>
-    <button data-t="cli">Clients et mercuriales</button><button data-t="fac">Facturation mensuelle</button>
+    <button data-t="cli">Clients et mercuriales</button><button data-t="prd">Produits</button><button data-t="fac">Facturation mensuelle</button>
   </div>
   <div id="t-prod"><div class="bar"><input type="date" id="pd" aria-label="Jour de production"></div>
     <div class="tw"><table><thead><tr><th>Produit</th><th class="r">Total à produire</th><th class="r">Nb de clients</th></tr></thead><tbody id="pb"></tbody></table></div></div>
@@ -100,6 +100,11 @@ td input:disabled{opacity:.4}.ln{display:block;font-size:14px;color:var(--mute)}
     <div id="cl-list"><div class="bar"><button class="act pri" id="newc">+ Nouveau client</button></div>
       <div class="tw"><table><thead><tr><th>Client</th><th>Contact</th><th>Code d'accès</th><th class="r">Produits</th><th></th></tr></thead><tbody id="clb"></tbody></table></div></div>
     <div id="cl-ed" hidden></div>
+  </div>
+  <div id="t-prd" hidden>
+    <div id="pr-list"><div class="bar"><button class="act pri" id="newp">+ Nouveau produit</button></div>
+      <div class="tw"><table><thead><tr><th>Catégorie</th><th>Produit</th><th class="r">Prix standard HT</th><th>Statut</th><th></th></tr></thead><tbody id="prb"></tbody></table></div></div>
+    <div id="pr-ed" hidden></div>
   </div>
   <div id="t-fac" hidden><div class="bar"><input type="month" id="fm" aria-label="Mois"><button class="act pri" id="csv">Exporter en CSV</button><span class="note">TVA appliquée : 5,5 % sur tout (à affiner avec votre comptable)</span></div>
     <div class="tw"><table><thead><tr><th>Client</th><th class="r">Commandes</th><th class="r">Total HT</th><th class="r">TVA</th><th class="r">Total TTC</th></tr></thead><tbody id="fb"></tbody></table></div></div>
@@ -149,7 +154,7 @@ const cn=id=>(S.clients.find(c=>c.id==id)||{}).nom||id,pn=id=>(S.produits.find(p
 const tot=o=>o.lignes.reduce((a,l)=>a+l.q*l.px,0);
 function fillF(){$('fc').innerHTML='<option value="">Tous les clients</option>'+S.clients.map(c=>`<option value="${esc(c.id)}">${esc(c.nom)}</option>`).join('')}
 function initA(){$('pd').value=plus(1);$('fm').value=plus(0).slice(0,7);fillF();tab('prod')}
-function tab(t){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t==t));['prod','cmd','cli','fac'].forEach(x=>$('t-'+x).hidden=x!=t);({prod:drawP,cmd:drawO,cli:closeEd,fac:drawF})[t]()}
+function tab(t){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t==t));['prod','cmd','cli','prd','fac'].forEach(x=>$('t-'+x).hidden=x!=t);({prod:drawP,cmd:drawO,cli:closeEd,prd:drawPr,fac:drawF})[t]()}
 $('tabs').onclick=e=>{const b=e.target.closest('button');if(b)tab(b.dataset.t)};
 function drawP(){const a={},n={};S.orders.filter(o=>o.date==$('pd').value).forEach(o=>o.lignes.forEach(l=>{a[l.p]=(a[l.p]||0)+l.q;n[l.p]=(n[l.p]||0)+1}));
   $('pb').innerHTML=Object.keys(a).map(p=>`<tr><td>${esc(pn(p))}</td><td class="r big">${a[p]}</td><td class="r">${n[p]}</td></tr>`).join('')||'<tr><td colspan="3">Aucune commande ce jour-là.</td></tr>'}
@@ -176,6 +181,23 @@ function drawEd(){
   $('ecn').onclick=closeEd;
   $('esv').onclick=async()=>{if(!ed.nom.trim()||!ed.code.trim())return toast('Renseignez le nom et le code d\'accès');if(!Object.keys(ed.m).length)return toast('Ajoutez au moins un produit à la mercuriale');
     try{await api('saveClient',ed);S={...S,...await api('boot')};fillF();closeEd();toast('Client enregistré')}catch(x){toast(x.message)}}}
+function drawPr(){$('pr-ed').hidden=true;$('pr-list').hidden=false;
+  $('prb').innerHTML=S.produits.map((p,i)=>`<tr><td>${esc(p.cat)}</td><td><b>${esc(p.nom)}</b></td><td class="r">${eur(p.px)}</td><td>${p.dispo?'<span class="tag">Disponible</span>':'<span class="note">Masqué</span>'}</td><td class="r"><button class="act" data-i="${i}">Modifier</button></td></tr>`).join('')||'<tr><td colspan="5">Aucun produit.</td></tr>'}
+$('prb').onclick=e=>{const b=e.target.closest('button');if(b)openPr(S.produits[+b.dataset.i])};
+$('newp').onclick=()=>openPr({cat:'',nom:'',px:0,dispo:true});
+function openPr(p){$('pr-list').hidden=true;$('pr-ed').hidden=false;
+  $('pr-ed').innerHTML=`<h2 style="margin-top:0">${p.id?esc(p.nom):'Nouveau produit'}</h2>
+  <div class="f"><div><label for="fpc">Catégorie</label><input id="fpc" list="cats" value="${esc(p.cat)}"><datalist id="cats">${[...new Set(S.produits.map(x=>x.cat))].map(c=>`<option value="${esc(c)}">`).join('')}</datalist></div>
+  <div><label for="fpn">Nom du produit</label><input id="fpn" value="${esc(p.nom)}"></div>
+  <div><label for="fpp">Prix standard HT (€)</label><input id="fpp" type="number" step="0.01" min="0" value="${p.px}"></div></div>
+  <p><label><input type="checkbox" id="fpd"${p.dispo?' checked':''}> Disponible à la commande</label></p>
+  ${p.id?'':'<p><label><input type="checkbox" id="fpa"> Ajouter à la mercuriale de tous les clients existants (au prix standard)</label></p>'}
+  <p class="note">Le prix standard sert de base pour les nouvelles mercuriales. Le modifier ne change pas les prix déjà fixés pour chaque client.</p>
+  <div class="bar"><button class="act pri" id="fps">Enregistrer</button><button class="act" id="fpx">Annuler</button></div>`;
+  $('fpx').onclick=drawPr;
+  $('fps').onclick=async()=>{const d={id:p.id,cat:$('fpc').value,nom:$('fpn').value,px:parseFloat($('fpp').value),dispo:$('fpd').checked,addAll:!!($('fpa')&&$('fpa').checked)};
+    if(!d.nom.trim())return toast('Indiquez le nom du produit');if(!(d.px>=0))return toast('Prix invalide');
+    try{await api('saveProduct',d);S={...S,...await api('boot')};drawPr();toast('Produit enregistré')}catch(x){toast(x.message)}}}
 function drawF(){const m=$('fm').value,r={};
   S.orders.filter(o=>o.date.startsWith(m)).forEach(o=>{const x=r[o.client_id]||(r[o.client_id]={n:0,ht:0});x.n++;x.ht+=tot(o)});
   S.bill=Object.entries(r);
